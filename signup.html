@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Signup</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(135deg, #6a11cb, #2575fc);
+      height: 100vh;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0px 4px 20px rgba(0,0,0,0.2);
+      width: 320px;
+      text-align: center;
+    }
+    h2 { margin-bottom: 20px; color: #333; }
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #2575fc;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #6a11cb;
+    }
+    .error {
+      color: red;
+      font-size: 13px;
+      text-align: left;
+    }
+    a {
+      display: inline-block;
+      margin-top: 15px;
+      color: #2575fc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Signup</h2>
+    <form id="signupForm">
+      <input type="text" id="username" placeholder="Username" required>
+      <div id="usernameError" class="error"></div>
+
+      <input type="email" id="email" placeholder="Email" required>
+      <div id="emailError" class="error"></div>
+
+      <input type="password" id="password" placeholder="Password (min 6 chars)" required>
+      <div id="passwordError" class="error"></div>
+
+      <button type="submit">Create Account</button>
+    </form>
+    <a href="dashboard.html">Go to Dashboard</a>
+  </div>
+
+  <script>
+    const form = document.getElementById("signupForm");
+
+    function getUsers() {
+      return JSON.parse(localStorage.getItem("users")) || [];
+    }
+
+    function saveUsers(users) {
+      localStorage.setItem("users", JSON.stringify(users));
+    }
+
+    async function hashPassword(password) {
+      const msgUint8 = new TextEncoder().encode(password);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", msgUint8);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      document.getElementById("usernameError").textContent = "";
+      document.getElementById("emailError").textContent = "";
+      document.getElementById("passwordError").textContent = "";
+
+      let valid = true;
+      if (!username) { document.getElementById("usernameError").textContent = "Username required"; valid = false; }
+      if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) { document.getElementById("emailError").textContent = "Invalid email"; valid = false; }
+      if (password.length < 6) { document.getElementById("passwordError").textContent = "Min 6 chars"; valid = false; }
+
+      if (!valid) return;
+
+      const hashedPassword = await hashPassword(password);
+
+      const users = getUsers();
+      users.push({ id: Date.now(), username, email, password: hashedPassword });
+      saveUsers(users);
+
+      alert("Signup successful!");
+      form.reset();
+    });
+  </script>
+</body>
+</html>
